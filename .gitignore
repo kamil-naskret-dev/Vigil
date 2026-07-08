@@ -2,3 +2,4 @@ node_modules
 PLAN.md
 .env
 dist
+/src/generated/prisma
