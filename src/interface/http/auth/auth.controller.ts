@@ -3,14 +3,21 @@ import { RegisterUserHandler } from '../../../core/application/commands/register
 import { RegisterUserCommand } from '../../../core/application/commands/register-user.command';
 import { LoginUserHandler, LoginResult } from '../../../core/application/commands/login-user.handler';
 import { LoginUserCommand } from '../../../core/application/commands/login-user.command';
+import { RefreshTokenHandler, RefreshResult } from '../../../core/application/commands/refresh-token.handler';
+import { RefreshTokenCommand } from '../../../core/application/commands/refresh-token.command';
+import { RevokeTokenHandler } from '../../../core/application/commands/revoke-token.handler';
+import { RevokeTokenCommand } from '../../../core/application/commands/revoke-token.command';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly registerHandler: RegisterUserHandler,
     private readonly loginHandler: LoginUserHandler,
+    private readonly refreshTokenHandler: RefreshTokenHandler,
+    private readonly revokeTokenHandler: RevokeTokenHandler,
   ) {}
 
   @Post('register')
@@ -28,6 +35,22 @@ export class AuthController {
   async login(@Body() dto: LoginDto): Promise<LoginResult> {
     return this.loginHandler.execute(
       new LoginUserCommand(dto.email, dto.password),
+    );
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() dto: RefreshTokenDto): Promise<RefreshResult> {
+    return this.refreshTokenHandler.execute(
+      new RefreshTokenCommand(dto.refreshToken),
+    );
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Body() dto: RefreshTokenDto): Promise<void> {
+    await this.revokeTokenHandler.execute(
+      new RevokeTokenCommand(dto.refreshToken),
     );
   }
 }
