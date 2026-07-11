@@ -95,7 +95,7 @@ export class MonitorController {
     @CurrentUser() user: JwtPayload,
   ) {
     await this.updateHandler.execute(
-      new UpdateMonitorCommand(id, user.sub, dto.name, dto.intervalMinutes),
+      new UpdateMonitorCommand(id, user.sub, dto?.name, dto?.intervalMinutes),
     );
   }
 

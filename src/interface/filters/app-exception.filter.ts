@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AppException } from '../../core/domain/errors/app.exception';
+import { DomainError } from '../../core/domain/errors/domain.error';
 import { ErrorCode } from '../../core/domain/errors/error-codes.enum';
 
 @Catch(AppException)
@@ -17,6 +18,19 @@ export class AppExceptionFilter implements ExceptionFilter {
     response.status(exception.status).json({
       statusCode: exception.status,
       code: exception.code,
+      message: exception.message,
+    });
+  }
+}
+
+@Catch(DomainError)
+export class DomainErrorFilter implements ExceptionFilter {
+  catch(exception: DomainError, host: ArgumentsHost) {
+    const response = host.switchToHttp().getResponse<Response>();
+
+    response.status(HttpStatus.BAD_REQUEST).json({
+      statusCode: HttpStatus.BAD_REQUEST,
+      code: ErrorCode.VALIDATION_ERROR,
       message: exception.message,
     });
   }
