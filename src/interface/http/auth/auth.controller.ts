@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { RegisterUserHandler } from '../../../core/application/auth/commands/register-user.handler';
 import { RegisterUserCommand } from '../../../core/application/auth/commands/register-user.command';
 import { LoginUserHandler, LoginResult } from '../../../core/application/auth/commands/login-user.handler';
@@ -12,6 +13,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
+@Throttle({ default: { ttl: 60000, limit: 10 } })
 export class AuthController {
   constructor(
     private readonly registerHandler: RegisterUserHandler,
