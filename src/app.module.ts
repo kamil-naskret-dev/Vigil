@@ -8,6 +8,7 @@ import { MonitorModule } from './interface/modules/monitor.module';
 import { CheckerModule } from './interface/modules/checker.module';
 import { LoggerModule } from './infrastructure/logger/logger.module';
 import { LoggingInterceptor } from './interface/interceptors/logging.interceptor';
+import { HealthController } from './interface/http/health/health.controller';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { LoggingInterceptor } from './interface/interceptors/logging.interceptor
     MonitorModule,
     CheckerModule,
   ],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,

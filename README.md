@@ -1,98 +1,178 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Vigil
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Self-hosted uptime monitoring REST API. Vigil periodically checks your services and alerts you via email or webhook when something goes down — before your users do.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+- **Monitor management** — create, update, pause, resume and delete HTTP monitors with configurable check intervals
+- **Automatic checks** — BullMQ repeatable jobs ping each monitor on schedule; jobs survive Redis restarts
+- **Alerting** — email (Nodemailer) and signed webhooks (HMAC-SHA256) on status change
+- **Two-state alerting** — `DEGRADED` fires after 3 consecutive failures, `RECOVERED` fires on first success after degradation; no duplicate alerts
+- **Statistics** — uptime %, response time percentiles (p50/p95/p99), check history with pagination
+- **Dashboard** — aggregate summary across all monitors
+- **Security** — JWT auth (access + refresh tokens), rate limiting, Helmet, CORS-ready
+- **Observability** — structured JSON logs (Winston) with Request ID propagation
+- **Production-ready** — multi-stage Docker build, `prisma migrate deploy` on container start
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Architecture
 
-## Project setup
+Hexagonal Architecture + CQRS + Domain Events.
 
-```bash
-$ npm install
+```
+src/
+├── core/                       # Domain — zero framework dependencies
+│   ├── domain/                 # Entities, Value Objects, Domain Events
+│   └── application/            # Use Cases (Commands/Queries), Ports (interfaces)
+├── infrastructure/             # Adapters: Prisma, BullMQ, Nodemailer, Winston
+└── interface/                  # NestJS: Controllers, Guards, Filters, Modules
 ```
 
-## Compile and run the project
+Key design decisions:
+- Core layer imports nothing from NestJS or Prisma — only plain TypeScript
+- Commands mutate state, Queries read state — never mixed
+- Domain Events (`MonitorDegraded`, `MonitorRecovered`) are emitted by the entity after `save()`, dispatched in the use case
+- `useFactory` pattern wires non-`@Injectable` handler classes into NestJS DI
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | NestJS |
+| Database | PostgreSQL + Prisma ORM |
+| Queue | BullMQ + Redis |
+| Auth | JWT (access + refresh tokens) |
+| Email | Nodemailer |
+| Webhooks | Native `fetch` + HMAC-SHA256 signatures |
+| Logging | Winston (JSON in prod, colorized in dev) |
+| Docs | Swagger / OpenAPI |
+| Tests | Jest + Supertest (E2E) |
+| Container | Docker multi-stage build |
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 22+
+- Docker (for PostgreSQL and Redis)
+
+### Local development
 
 ```bash
-# development
-$ npm run start
+# 1. Clone and install
+git clone <repo>
+cd vigil
+npm install
 
-# watch mode
-$ npm run start:dev
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your values
 
-# production mode
-$ npm run start:prod
+# 3. Start infrastructure
+npm run docker:up
+
+# 4. Run migrations
+npx prisma migrate dev
+
+# 5. Start in watch mode
+npm run start:dev
 ```
 
-## Run tests
+API available at `http://localhost:3000`
+Swagger docs at `http://localhost:3000/api`
+BullMQ dashboard at `http://localhost:3000/queues`
+
+### Production (Docker)
 
 ```bash
-# unit tests
-$ npm run test
+# 1. Configure environment
+cp .env.example .env.prod
+# Set DATABASE_URL=postgresql://user:pass@postgres:5432/vigil
+# Set REDIS_HOST=redis
+# Set NODE_ENV=production
 
-# e2e tests
-$ npm run test:e2e
+# 2. Build and start full stack
+docker-compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
 
-# test coverage
-$ npm run test:cov
+# 3. View logs
+npm run docker:prod:logs
 ```
 
-## Deployment
+Migrations run automatically on container start.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Environment Variables
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Variable | Description | Example |
+|---|---|---|
+| `PORT` | HTTP port | `3000` |
+| `NODE_ENV` | Environment | `production` |
+| `LOG_LEVEL` | Winston log level | `info` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://vigil:vigil@localhost:5432/vigil` |
+| `REDIS_HOST` | Redis host | `localhost` |
+| `REDIS_PORT` | Redis port | `6379` |
+| `JWT_SECRET` | Access token secret | — |
+| `JWT_EXPIRES_IN` | Access token TTL | `15m` |
+| `JWT_REFRESH_SECRET` | Refresh token secret | — |
+| `JWT_REFRESH_EXPIRES_IN` | Refresh token TTL | `7d` |
+| `SMTP_HOST` | SMTP server host | `smtp.example.com` |
+| `SMTP_PORT` | SMTP server port | `587` |
+| `SMTP_SECURE` | Use TLS | `false` |
+| `SMTP_USER` | SMTP username | — |
+| `SMTP_PASS` | SMTP password | — |
+| `SMTP_FROM` | Sender address | `Vigil <alerts@example.com>` |
+
+## API Overview
+
+```
+POST   /auth/register          Register
+POST   /auth/login             Login → { accessToken, refreshToken }
+POST   /auth/refresh           Refresh access token
+POST   /auth/logout            Revoke refresh token
+
+GET    /monitors               List monitors (with uptime summary)
+POST   /monitors               Create monitor
+GET    /monitors/:id           Get monitor
+PATCH  /monitors/:id           Update monitor
+DELETE /monitors/:id           Delete monitor
+POST   /monitors/:id/pause     Pause checking
+POST   /monitors/:id/resume    Resume checking
+
+GET    /monitors/:id/checks    Check history (paginated)
+GET    /monitors/:id/stats     Statistics (uptime %, p50/p95/p99)
+
+GET    /monitors/:id/channels  List alert channels
+POST   /monitors/:id/channels  Add alert channel (email or webhook)
+DELETE /monitors/:id/channels/:channelId
+
+GET    /dashboard              Aggregate summary across all monitors
+
+GET    /health                 Health check
+```
+
+Full interactive docs: `GET /api`
+
+## Tests
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# E2E tests (requires running postgres + redis)
+npm run test:e2e
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Webhook Signature Verification
 
-## Resources
+Every webhook POST includes an `X-Vigil-Signature` header:
 
-Check out a few resources that may come in handy when working with NestJS:
+```
+X-Vigil-Signature: sha256=<hmac-hex>
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Verify on your end:
 
-## Support
+```ts
+import { createHmac } from 'crypto';
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+const expected = 'sha256=' + createHmac('sha256', secret)
+  .update(rawBody)
+  .digest('hex');
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+const valid = expected === req.headers['x-vigil-signature'];
+```
