@@ -1,3 +1,3 @@
-export class RevokeTokenCommand {
+export class RefreshTokenCommand {
   constructor(public readonly refreshToken: string) {}
 }

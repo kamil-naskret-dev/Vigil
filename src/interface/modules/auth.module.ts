@@ -5,10 +5,10 @@ import { PassportModule } from '@nestjs/passport';
 import type { StringValue } from 'ms';
 import { PrismaUserRepository } from '../../infrastructure/persistence/user.repository';
 import { PrismaRefreshTokenRepository } from '../../infrastructure/persistence/refresh-token.repository';
-import { RegisterUserHandler } from '../../core/application/commands/register-user.handler';
-import { LoginUserHandler } from '../../core/application/commands/login-user.handler';
-import { RefreshTokenHandler } from '../../core/application/commands/refresh-token.handler';
-import { RevokeTokenHandler } from '../../core/application/commands/revoke-token.handler';
+import { RegisterUserHandler } from '../../core/application/auth/commands/register-user.handler';
+import { LoginUserHandler } from '../../core/application/auth/commands/login-user.handler';
+import { RefreshTokenHandler } from '../../core/application/auth/commands/refresh-token.handler';
+import { RevokeTokenHandler } from '../../core/application/auth/commands/revoke-token.handler';
 import { JwtStrategy } from '../../infrastructure/auth/jwt.strategy';
 import { AuthController } from '../http/auth/auth.controller';
 

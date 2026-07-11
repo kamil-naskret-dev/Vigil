@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IUserRepository } from '../../core/application/ports/user.repository.port';
+import { IUserRepository } from '../../core/application/auth/ports/user.repository.port';
 import { User } from '../../core/domain/user/user.entity';
 import { HashedPassword } from '../../core/domain/user/password.value-object';
 import { PrismaService } from '../prisma/prisma.service';

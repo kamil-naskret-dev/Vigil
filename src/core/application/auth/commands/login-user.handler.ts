@@ -2,8 +2,8 @@ import { randomUUID } from 'crypto';
 import { IUserRepository } from '../ports/user.repository.port';
 import { IRefreshTokenRepository } from '../ports/refresh-token.repository.port';
 import { LoginUserCommand } from './login-user.command';
-import { AppException } from '../../domain/errors/app.exception';
-import { ErrorCode } from '../../domain/errors/error-codes.enum';
+import { AppException } from '../../../domain/errors/app.exception';
+import { ErrorCode } from '../../../domain/errors/error-codes.enum';
 
 export interface LoginResult {
   accessToken: string;
