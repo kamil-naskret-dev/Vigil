@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaMonitorRepository } from '../../infrastructure/persistence/monitor.repository';
+import { PrismaAlertChannelRepository } from '../../infrastructure/persistence/alert-channel.repository';
 import { BullMQScheduler } from '../../infrastructure/scheduler/bullmq.scheduler';
 import { CheckerModule } from './checker.module';
 import { CreateMonitorHandler } from '../../core/application/monitor/commands/create-monitor.handler';
@@ -7,8 +8,11 @@ import { UpdateMonitorHandler } from '../../core/application/monitor/commands/up
 import { DeleteMonitorHandler } from '../../core/application/monitor/commands/delete-monitor.handler';
 import { PauseMonitorHandler } from '../../core/application/monitor/commands/pause-monitor.handler';
 import { ResumeMonitorHandler } from '../../core/application/monitor/commands/resume-monitor.handler';
+import { CreateAlertChannelHandler } from '../../core/application/monitor/commands/create-alert-channel.handler';
+import { DeleteAlertChannelHandler } from '../../core/application/monitor/commands/delete-alert-channel.handler';
 import { GetMonitorHandler } from '../../core/application/monitor/queries/get-monitor.handler';
 import { ListMonitorsHandler } from '../../core/application/monitor/queries/list-monitors.handler';
+import { ListAlertChannelsHandler } from '../../core/application/monitor/queries/list-alert-channels.handler';
 import { MonitorController } from '../http/monitor/monitor.controller';
 
 @Module({
@@ -54,6 +58,30 @@ import { MonitorController } from '../http/monitor/monitor.controller';
       provide: ListMonitorsHandler,
       useFactory: (repo: PrismaMonitorRepository) => new ListMonitorsHandler(repo),
       inject: [PrismaMonitorRepository],
+    },
+    {
+      provide: CreateAlertChannelHandler,
+      useFactory: (
+        monitorRepo: PrismaMonitorRepository,
+        channelRepo: PrismaAlertChannelRepository,
+      ) => new CreateAlertChannelHandler(monitorRepo, channelRepo),
+      inject: [PrismaMonitorRepository, PrismaAlertChannelRepository],
+    },
+    {
+      provide: DeleteAlertChannelHandler,
+      useFactory: (
+        monitorRepo: PrismaMonitorRepository,
+        channelRepo: PrismaAlertChannelRepository,
+      ) => new DeleteAlertChannelHandler(monitorRepo, channelRepo),
+      inject: [PrismaMonitorRepository, PrismaAlertChannelRepository],
+    },
+    {
+      provide: ListAlertChannelsHandler,
+      useFactory: (
+        monitorRepo: PrismaMonitorRepository,
+        channelRepo: PrismaAlertChannelRepository,
+      ) => new ListAlertChannelsHandler(monitorRepo, channelRepo),
+      inject: [PrismaMonitorRepository, PrismaAlertChannelRepository],
     },
   ],
 })

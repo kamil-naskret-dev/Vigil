@@ -8,6 +8,7 @@ import { AxiosHttpClient } from '../../infrastructure/http-client/axios-http-cli
 import { PrismaCheckRepository } from '../../infrastructure/persistence/check.repository';
 import { PrismaMonitorRepository } from '../../infrastructure/persistence/monitor.repository';
 import { PrismaUserRepository } from '../../infrastructure/persistence/user.repository';
+import { PrismaAlertChannelRepository } from '../../infrastructure/persistence/alert-channel.repository';
 import {
   BullMQScheduler,
   CHECK_QUEUE,
@@ -15,6 +16,7 @@ import {
 import { CheckWorker } from '../../infrastructure/scheduler/check.worker';
 import { SchedulerBootstrapService } from '../../infrastructure/scheduler/scheduler-bootstrap.service';
 import { NodemailerNotifier } from '../../infrastructure/notifications/nodemailer-notifier';
+import { WebhookNotifier } from '../../infrastructure/notifications/webhook-notifier';
 import { PerformCheckUseCase } from '../../core/application/monitor/commands/perform-check.use-case';
 
 @Module({
@@ -44,6 +46,7 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
     PrismaCheckRepository,
     PrismaMonitorRepository,
     PrismaUserRepository,
+    PrismaAlertChannelRepository,
     BullMQScheduler,
     CheckWorker,
     SchedulerBootstrapService,
@@ -52,6 +55,7 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
       useFactory: (config: ConfigService) => new NodemailerNotifier(config),
       inject: [ConfigService],
     },
+    WebhookNotifier,
     {
       provide: PerformCheckUseCase,
       useFactory: (
@@ -60,6 +64,8 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
         httpClient: AxiosHttpClient,
         userRepo: PrismaUserRepository,
         notifier: NodemailerNotifier,
+        channelRepo: PrismaAlertChannelRepository,
+        webhookSender: WebhookNotifier,
       ) =>
         new PerformCheckUseCase(
           monitorRepo,
@@ -67,6 +73,8 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
           httpClient,
           userRepo,
           notifier,
+          channelRepo,
+          webhookSender,
         ),
       inject: [
         PrismaMonitorRepository,
@@ -74,9 +82,11 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
         AxiosHttpClient,
         PrismaUserRepository,
         NodemailerNotifier,
+        PrismaAlertChannelRepository,
+        WebhookNotifier,
       ],
     },
   ],
-  exports: [BullMQScheduler, PerformCheckUseCase],
+  exports: [BullMQScheduler, PerformCheckUseCase, PrismaAlertChannelRepository],
 })
 export class CheckerModule {}

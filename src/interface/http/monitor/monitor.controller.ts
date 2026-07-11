@@ -18,18 +18,25 @@ import { UpdateMonitorHandler } from '../../../core/application/monitor/commands
 import { DeleteMonitorHandler } from '../../../core/application/monitor/commands/delete-monitor.handler';
 import { PauseMonitorHandler } from '../../../core/application/monitor/commands/pause-monitor.handler';
 import { ResumeMonitorHandler } from '../../../core/application/monitor/commands/resume-monitor.handler';
+import { CreateAlertChannelHandler } from '../../../core/application/monitor/commands/create-alert-channel.handler';
+import { DeleteAlertChannelHandler } from '../../../core/application/monitor/commands/delete-alert-channel.handler';
 import { GetMonitorHandler } from '../../../core/application/monitor/queries/get-monitor.handler';
 import { ListMonitorsHandler } from '../../../core/application/monitor/queries/list-monitors.handler';
+import { ListAlertChannelsHandler } from '../../../core/application/monitor/queries/list-alert-channels.handler';
 import { CreateMonitorCommand } from '../../../core/application/monitor/commands/create-monitor.command';
 import { UpdateMonitorCommand } from '../../../core/application/monitor/commands/update-monitor.command';
 import { DeleteMonitorCommand } from '../../../core/application/monitor/commands/delete-monitor.command';
 import { PauseMonitorCommand } from '../../../core/application/monitor/commands/pause-monitor.command';
 import { ResumeMonitorCommand } from '../../../core/application/monitor/commands/resume-monitor.command';
+import { CreateAlertChannelCommand } from '../../../core/application/monitor/commands/create-alert-channel.command';
+import { DeleteAlertChannelCommand } from '../../../core/application/monitor/commands/delete-alert-channel.command';
 import { GetMonitorQuery } from '../../../core/application/monitor/queries/get-monitor.query';
 import { ListMonitorsQuery } from '../../../core/application/monitor/queries/list-monitors.query';
+import { ListAlertChannelsQuery } from '../../../core/application/monitor/queries/list-alert-channels.query';
 import { PerformCheckUseCase } from '../../../core/application/monitor/commands/perform-check.use-case';
 import { CreateMonitorDto } from './dto/create-monitor.dto';
 import { UpdateMonitorDto } from './dto/update-monitor.dto';
+import { CreateAlertChannelDto } from './dto/create-alert-channel.dto';
 
 @Controller('monitors')
 @UseGuards(JwtAuthGuard)
@@ -40,8 +47,11 @@ export class MonitorController {
     private readonly deleteHandler: DeleteMonitorHandler,
     private readonly pauseHandler: PauseMonitorHandler,
     private readonly resumeHandler: ResumeMonitorHandler,
+    private readonly createChannelHandler: CreateAlertChannelHandler,
+    private readonly deleteChannelHandler: DeleteAlertChannelHandler,
     private readonly getHandler: GetMonitorHandler,
     private readonly listHandler: ListMonitorsHandler,
+    private readonly listChannelsHandler: ListAlertChannelsHandler,
     private readonly performCheck: PerformCheckUseCase,
   ) {}
 
@@ -124,5 +134,42 @@ export class MonitorController {
   async triggerCheck(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     await this.getHandler.execute(new GetMonitorQuery(id, user.sub));
     await this.performCheck.execute(id);
+  }
+
+  @Post(':id/channels')
+  @HttpCode(HttpStatus.CREATED)
+  async createChannel(
+    @Param('id') id: string,
+    @Body() dto: CreateAlertChannelDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.createChannelHandler.execute(
+      new CreateAlertChannelCommand(id, user.sub, dto.url, dto.secret),
+    );
+  }
+
+  @Get(':id/channels')
+  async listChannels(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    const channels = await this.listChannelsHandler.execute(
+      new ListAlertChannelsQuery(id, user.sub),
+    );
+
+    return channels.map((c) => ({
+      id: c.id,
+      url: c.url,
+      createdAt: c.createdAt,
+    }));
+  }
+
+  @Delete(':id/channels/:channelId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteChannel(
+    @Param('id') id: string,
+    @Param('channelId') channelId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    await this.deleteChannelHandler.execute(
+      new DeleteAlertChannelCommand(channelId, id, user.sub),
+    );
   }
 }

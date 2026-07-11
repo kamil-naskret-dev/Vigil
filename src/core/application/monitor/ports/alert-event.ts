@@ -3,6 +3,6 @@ export interface AlertEvent {
   monitorId: string;
   monitorName: string;
   url: string;
-  recipientEmail: string;
+  recipientEmail?: string;
   occurredAt: Date;
 }
