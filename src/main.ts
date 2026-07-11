@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { setupSwagger } from './infrastructure/swagger/swagger.config';
 import {
   AppExceptionFilter,
   DomainErrorFilter,
@@ -52,6 +53,8 @@ async function bootstrap() {
   );
 
   app.useGlobalInterceptors(new RequestIdInterceptor());
+
+  setupSwagger(app);
 
   await app.listen(process.env.PORT ?? 3000);
 }
