@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaMonitorRepository } from '../../infrastructure/persistence/monitor.repository';
+import { CheckerModule } from './checker.module';
 import { CreateMonitorHandler } from '../../core/application/monitor/commands/create-monitor.handler';
 import { UpdateMonitorHandler } from '../../core/application/monitor/commands/update-monitor.handler';
 import { DeleteMonitorHandler } from '../../core/application/monitor/commands/delete-monitor.handler';
@@ -10,6 +11,7 @@ import { ListMonitorsHandler } from '../../core/application/monitor/queries/list
 import { MonitorController } from '../http/monitor/monitor.controller';
 
 @Module({
+  imports: [CheckerModule],
   controllers: [MonitorController],
   providers: [
     PrismaMonitorRepository,
