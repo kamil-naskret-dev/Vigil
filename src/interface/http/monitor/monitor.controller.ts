@@ -27,6 +27,7 @@ import { PauseMonitorCommand } from '../../../core/application/monitor/commands/
 import { ResumeMonitorCommand } from '../../../core/application/monitor/commands/resume-monitor.command';
 import { GetMonitorQuery } from '../../../core/application/monitor/queries/get-monitor.query';
 import { ListMonitorsQuery } from '../../../core/application/monitor/queries/list-monitors.query';
+import { PerformCheckUseCase } from '../../../core/application/monitor/commands/perform-check.use-case';
 import { CreateMonitorDto } from './dto/create-monitor.dto';
 import { UpdateMonitorDto } from './dto/update-monitor.dto';
 
@@ -41,6 +42,7 @@ export class MonitorController {
     private readonly resumeHandler: ResumeMonitorHandler,
     private readonly getHandler: GetMonitorHandler,
     private readonly listHandler: ListMonitorsHandler,
+    private readonly performCheck: PerformCheckUseCase,
   ) {}
 
   @Post()
@@ -115,5 +117,12 @@ export class MonitorController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async resume(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     await this.resumeHandler.execute(new ResumeMonitorCommand(id, user.sub));
+  }
+
+  @Post(':id/check')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async triggerCheck(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    await this.getHandler.execute(new GetMonitorQuery(id, user.sub));
+    await this.performCheck.execute(id);
   }
 }
