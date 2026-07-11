@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -23,6 +24,9 @@ import { DeleteAlertChannelHandler } from '../../../core/application/monitor/com
 import { GetMonitorHandler } from '../../../core/application/monitor/queries/get-monitor.handler';
 import { ListMonitorsHandler } from '../../../core/application/monitor/queries/list-monitors.handler';
 import { ListAlertChannelsHandler } from '../../../core/application/monitor/queries/list-alert-channels.handler';
+import { GetCheckHistoryHandler } from '../../../core/application/monitor/queries/get-check-history.handler';
+import { GetMonitorStatsHandler } from '../../../core/application/monitor/queries/get-monitor-stats.handler';
+import { GetMonitorStatsQuery, StatsPeriod } from '../../../core/application/monitor/queries/get-monitor-stats.query';
 import { CreateMonitorCommand } from '../../../core/application/monitor/commands/create-monitor.command';
 import { UpdateMonitorCommand } from '../../../core/application/monitor/commands/update-monitor.command';
 import { DeleteMonitorCommand } from '../../../core/application/monitor/commands/delete-monitor.command';
@@ -33,6 +37,7 @@ import { DeleteAlertChannelCommand } from '../../../core/application/monitor/com
 import { GetMonitorQuery } from '../../../core/application/monitor/queries/get-monitor.query';
 import { ListMonitorsQuery } from '../../../core/application/monitor/queries/list-monitors.query';
 import { ListAlertChannelsQuery } from '../../../core/application/monitor/queries/list-alert-channels.query';
+import { GetCheckHistoryQuery } from '../../../core/application/monitor/queries/get-check-history.query';
 import { PerformCheckUseCase } from '../../../core/application/monitor/commands/perform-check.use-case';
 import { CreateMonitorDto } from './dto/create-monitor.dto';
 import { UpdateMonitorDto } from './dto/update-monitor.dto';
@@ -52,6 +57,8 @@ export class MonitorController {
     private readonly getHandler: GetMonitorHandler,
     private readonly listHandler: ListMonitorsHandler,
     private readonly listChannelsHandler: ListAlertChannelsHandler,
+    private readonly getCheckHistoryHandler: GetCheckHistoryHandler,
+    private readonly getMonitorStatsHandler: GetMonitorStatsHandler,
     private readonly performCheck: PerformCheckUseCase,
   ) {}
 
@@ -134,6 +141,38 @@ export class MonitorController {
   async triggerCheck(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     await this.getHandler.execute(new GetMonitorQuery(id, user.sub));
     await this.performCheck.execute(id);
+  }
+
+  @Get(':id/checks')
+  async getCheckHistory(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('limit') limit?: string,
+    @Query('page') page?: string,
+  ) {
+    return this.getCheckHistoryHandler.execute(
+      new GetCheckHistoryQuery(
+        id,
+        user.sub,
+        from ? new Date(from) : undefined,
+        to ? new Date(to) : undefined,
+        limit ? parseInt(limit) : 100,
+        page ? parseInt(page) : 1,
+      ),
+    );
+  }
+
+  @Get(':id/stats')
+  async getStats(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Query('period') period?: string,
+  ) {
+    return this.getMonitorStatsHandler.execute(
+      new GetMonitorStatsQuery(id, user.sub, (period as StatsPeriod) ?? '7d'),
+    );
   }
 
   @Post(':id/channels')

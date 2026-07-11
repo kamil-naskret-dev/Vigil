@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ICheckRepository } from '../../core/application/monitor/ports/check.repository.port';
+import {
+  ICheckRepository,
+  CheckHistoryFilters,
+  CheckHistoryResult,
+  StatsSample,
+} from '../../core/application/monitor/ports/check.repository.port';
 import { Check } from '../../core/domain/check/check.entity';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -18,6 +23,45 @@ export class PrismaCheckRepository implements ICheckRepository {
         error: check.error,
         checkedAt: check.checkedAt,
       },
+    });
+  }
+
+  async findHistory(monitorId: string, filters: CheckHistoryFilters): Promise<CheckHistoryResult> {
+    const where = {
+      monitorId,
+      ...(filters.from || filters.to
+        ? {
+            checkedAt: {
+              ...(filters.from ? { gte: filters.from } : {}),
+              ...(filters.to ? { lte: filters.to } : {}),
+            },
+          }
+        : {}),
+    };
+
+    const [records, total] = await Promise.all([
+      this.prisma.check.findMany({
+        where,
+        orderBy: { checkedAt: 'desc' },
+        take: filters.limit,
+        skip: (filters.page - 1) * filters.limit,
+      }),
+      this.prisma.check.count({ where }),
+    ]);
+
+    return {
+      data: records.map((r) => Check.create(r)),
+      total,
+      page: filters.page,
+      limit: filters.limit,
+    };
+  }
+
+  async findForStats(monitorId: string, since: Date): Promise<StatsSample[]> {
+    return this.prisma.check.findMany({
+      where: { monitorId, checkedAt: { gte: since } },
+      select: { isUp: true, responseTimeMs: true },
+      orderBy: { checkedAt: 'asc' },
     });
   }
 

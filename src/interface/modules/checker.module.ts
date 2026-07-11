@@ -87,6 +87,6 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
       ],
     },
   ],
-  exports: [BullMQScheduler, PerformCheckUseCase, PrismaAlertChannelRepository],
+  exports: [BullMQScheduler, PerformCheckUseCase, PrismaAlertChannelRepository, PrismaCheckRepository],
 })
 export class CheckerModule {}
