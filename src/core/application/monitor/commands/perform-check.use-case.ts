@@ -4,6 +4,8 @@ import { ICheckRepository } from '../ports/check.repository.port';
 import { IHttpClient } from '../ports/http-client.port';
 import { IUserRepository } from '../../auth/ports/user.repository.port';
 import { INotifier } from '../ports/notifier.port';
+import { IAlertChannelRepository } from '../ports/alert-channel.repository.port';
+import { IWebhookSender } from '../ports/webhook-sender.port';
 import { Check } from '../../../domain/check/check.entity';
 import { MonitorDegraded, MonitorRecovered } from '../../../domain/monitor/monitor.events';
 
@@ -14,6 +16,8 @@ export class PerformCheckUseCase {
     private readonly httpClient: IHttpClient,
     private readonly userRepository: IUserRepository,
     private readonly notifier: INotifier,
+    private readonly channelRepository: IAlertChannelRepository,
+    private readonly webhookSender: IWebhookSender,
   ) {}
 
   async execute(monitorId: string): Promise<void> {
@@ -65,16 +69,22 @@ export class PerformCheckUseCase {
     const events = monitor.pullEvents();
     for (const event of events) {
       if (event instanceof MonitorDegraded || event instanceof MonitorRecovered) {
+        const alertEvent = {
+          type: (event instanceof MonitorDegraded ? 'DEGRADED' : 'RECOVERED') as 'DEGRADED' | 'RECOVERED',
+          monitorId: monitor.id,
+          monitorName: monitor.name,
+          url: monitor.url.value,
+          occurredAt: event.occurredAt,
+        };
+
         const user = await this.userRepository.findById(monitor.userId);
         if (user) {
-          await this.notifier.notify({
-            type: event instanceof MonitorDegraded ? 'DEGRADED' : 'RECOVERED',
-            monitorId: monitor.id,
-            monitorName: monitor.name,
-            url: monitor.url.value,
-            recipientEmail: user.email,
-            occurredAt: event.occurredAt,
-          });
+          await this.notifier.notify({ ...alertEvent, recipientEmail: user.email });
+        }
+
+        const channels = await this.channelRepository.findByMonitorId(monitor.id);
+        for (const channel of channels) {
+          await this.webhookSender.send(alertEvent, channel.url, channel.secret);
         }
       }
     }

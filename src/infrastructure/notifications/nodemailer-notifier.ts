@@ -24,6 +24,7 @@ export class NodemailerNotifier implements INotifier {
   }
 
   async notify(event: AlertEvent): Promise<void> {
+    if (!event.recipientEmail) return;
     const subject =
       event.type === 'DEGRADED'
         ? `🔴 [Vigil] ${event.monitorName} is DOWN`
