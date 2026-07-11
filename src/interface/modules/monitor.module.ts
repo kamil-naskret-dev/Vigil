@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaMonitorRepository } from '../../infrastructure/persistence/monitor.repository';
 import { PrismaAlertChannelRepository } from '../../infrastructure/persistence/alert-channel.repository';
+import { PrismaCheckRepository } from '../../infrastructure/persistence/check.repository';
 import { BullMQScheduler } from '../../infrastructure/scheduler/bullmq.scheduler';
 import { CheckerModule } from './checker.module';
 import { CreateMonitorHandler } from '../../core/application/monitor/commands/create-monitor.handler';
@@ -13,6 +14,7 @@ import { DeleteAlertChannelHandler } from '../../core/application/monitor/comman
 import { GetMonitorHandler } from '../../core/application/monitor/queries/get-monitor.handler';
 import { ListMonitorsHandler } from '../../core/application/monitor/queries/list-monitors.handler';
 import { ListAlertChannelsHandler } from '../../core/application/monitor/queries/list-alert-channels.handler';
+import { GetCheckHistoryHandler } from '../../core/application/monitor/queries/get-check-history.handler';
 import { MonitorController } from '../http/monitor/monitor.controller';
 
 @Module({
@@ -82,6 +84,14 @@ import { MonitorController } from '../http/monitor/monitor.controller';
         channelRepo: PrismaAlertChannelRepository,
       ) => new ListAlertChannelsHandler(monitorRepo, channelRepo),
       inject: [PrismaMonitorRepository, PrismaAlertChannelRepository],
+    },
+    {
+      provide: GetCheckHistoryHandler,
+      useFactory: (
+        monitorRepo: PrismaMonitorRepository,
+        checkRepo: PrismaCheckRepository,
+      ) => new GetCheckHistoryHandler(monitorRepo, checkRepo),
+      inject: [PrismaMonitorRepository, PrismaCheckRepository],
     },
   ],
 })
