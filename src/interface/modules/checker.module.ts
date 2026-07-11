@@ -18,9 +18,12 @@ import { SchedulerBootstrapService } from '../../infrastructure/scheduler/schedu
 import { NodemailerNotifier } from '../../infrastructure/notifications/nodemailer-notifier';
 import { WebhookNotifier } from '../../infrastructure/notifications/webhook-notifier';
 import { PerformCheckUseCase } from '../../core/application/monitor/commands/perform-check.use-case';
+import { LOGGER_PORT, ILogger } from '../../core/application/ports/logger.port';
+import { LoggerModule } from '../../infrastructure/logger/logger.module';
 
 @Module({
   imports: [
+    LoggerModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -66,6 +69,7 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
         notifier: NodemailerNotifier,
         channelRepo: PrismaAlertChannelRepository,
         webhookSender: WebhookNotifier,
+        logger: ILogger,
       ) =>
         new PerformCheckUseCase(
           monitorRepo,
@@ -75,6 +79,7 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
           notifier,
           channelRepo,
           webhookSender,
+          logger,
         ),
       inject: [
         PrismaMonitorRepository,
@@ -84,6 +89,7 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
         NodemailerNotifier,
         PrismaAlertChannelRepository,
         WebhookNotifier,
+        LOGGER_PORT,
       ],
     },
   ],
