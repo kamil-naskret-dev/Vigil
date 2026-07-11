@@ -3,3 +3,4 @@ PLAN.md
 .env
 dist
 /src/generated/prisma
+.env.prod
