@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import { WinstonModule } from 'nest-winston';
 import { AppModule } from './app.module';
 import { setupSwagger } from './infrastructure/swagger/swagger.config';
+import { winstonConfig } from './infrastructure/logger/logger.config';
 import {
   AppExceptionFilter,
   DomainErrorFilter,
@@ -12,7 +14,9 @@ import {
 import { RequestIdInterceptor } from './interface/interceptors/request-id.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger(winstonConfig),
+  });
 
   app.use(
     helmet({

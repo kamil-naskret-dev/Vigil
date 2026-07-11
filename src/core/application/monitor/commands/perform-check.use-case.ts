@@ -6,6 +6,7 @@ import { IUserRepository } from '../../auth/ports/user.repository.port';
 import { INotifier } from '../ports/notifier.port';
 import { IAlertChannelRepository } from '../ports/alert-channel.repository.port';
 import { IWebhookSender } from '../ports/webhook-sender.port';
+import { ILogger } from '../../ports/logger.port';
 import { Check } from '../../../domain/check/check.entity';
 import { MonitorDegraded, MonitorRecovered } from '../../../domain/monitor/monitor.events';
 
@@ -18,6 +19,7 @@ export class PerformCheckUseCase {
     private readonly notifier: INotifier,
     private readonly channelRepository: IAlertChannelRepository,
     private readonly webhookSender: IWebhookSender,
+    private readonly logger: ILogger,
   ) {}
 
   async execute(monitorId: string): Promise<void> {
@@ -65,6 +67,15 @@ export class PerformCheckUseCase {
 
     await this.checkRepository.save(check);
     await this.monitorRepository.save(monitor);
+
+    this.logger.info('Check performed', {
+      context: 'CheckWorker',
+      monitorId,
+      url: monitor.url.value,
+      isUp: check.isUp,
+      responseTimeMs: check.responseTimeMs,
+      statusCode: check.statusCode,
+    });
 
     const events = monitor.pullEvents();
     for (const event of events) {
