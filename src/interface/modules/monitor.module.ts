@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaMonitorRepository } from '../../infrastructure/persistence/monitor.repository';
+import { BullMQScheduler } from '../../infrastructure/scheduler/bullmq.scheduler';
 import { CheckerModule } from './checker.module';
 import { CreateMonitorHandler } from '../../core/application/monitor/commands/create-monitor.handler';
 import { UpdateMonitorHandler } from '../../core/application/monitor/commands/update-monitor.handler';
@@ -17,8 +18,9 @@ import { MonitorController } from '../http/monitor/monitor.controller';
     PrismaMonitorRepository,
     {
       provide: CreateMonitorHandler,
-      useFactory: (repo: PrismaMonitorRepository) => new CreateMonitorHandler(repo),
-      inject: [PrismaMonitorRepository],
+      useFactory: (repo: PrismaMonitorRepository, scheduler: BullMQScheduler) =>
+        new CreateMonitorHandler(repo, scheduler),
+      inject: [PrismaMonitorRepository, BullMQScheduler],
     },
     {
       provide: UpdateMonitorHandler,
@@ -27,18 +29,21 @@ import { MonitorController } from '../http/monitor/monitor.controller';
     },
     {
       provide: DeleteMonitorHandler,
-      useFactory: (repo: PrismaMonitorRepository) => new DeleteMonitorHandler(repo),
-      inject: [PrismaMonitorRepository],
+      useFactory: (repo: PrismaMonitorRepository, scheduler: BullMQScheduler) =>
+        new DeleteMonitorHandler(repo, scheduler),
+      inject: [PrismaMonitorRepository, BullMQScheduler],
     },
     {
       provide: PauseMonitorHandler,
-      useFactory: (repo: PrismaMonitorRepository) => new PauseMonitorHandler(repo),
-      inject: [PrismaMonitorRepository],
+      useFactory: (repo: PrismaMonitorRepository, scheduler: BullMQScheduler) =>
+        new PauseMonitorHandler(repo, scheduler),
+      inject: [PrismaMonitorRepository, BullMQScheduler],
     },
     {
       provide: ResumeMonitorHandler,
-      useFactory: (repo: PrismaMonitorRepository) => new ResumeMonitorHandler(repo),
-      inject: [PrismaMonitorRepository],
+      useFactory: (repo: PrismaMonitorRepository, scheduler: BullMQScheduler) =>
+        new ResumeMonitorHandler(repo, scheduler),
+      inject: [PrismaMonitorRepository, BullMQScheduler],
     },
     {
       provide: GetMonitorHandler,
