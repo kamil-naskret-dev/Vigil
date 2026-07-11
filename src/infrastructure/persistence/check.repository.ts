@@ -4,6 +4,7 @@ import {
   CheckHistoryFilters,
   CheckHistoryResult,
   StatsSample,
+  MonitorSummaryStats,
 } from '../../core/application/monitor/ports/check.repository.port';
 import { Check } from '../../core/domain/check/check.entity';
 import { PrismaService } from '../prisma/prisma.service';
@@ -26,7 +27,10 @@ export class PrismaCheckRepository implements ICheckRepository {
     });
   }
 
-  async findHistory(monitorId: string, filters: CheckHistoryFilters): Promise<CheckHistoryResult> {
+  async findHistory(
+    monitorId: string,
+    filters: CheckHistoryFilters,
+  ): Promise<CheckHistoryResult> {
     const where = {
       monitorId,
       ...(filters.from || filters.to
@@ -55,6 +59,28 @@ export class PrismaCheckRepository implements ICheckRepository {
       page: filters.page,
       limit: filters.limit,
     };
+  }
+
+  async findSummaryStats(monitorIds: string[], since: Date): Promise<MonitorSummaryStats[]> {
+    if (monitorIds.length === 0) return [];
+
+    const rows = await this.prisma.$queryRaw<
+      { monitorId: string; total: bigint; up_count: bigint }[]
+    >`
+      SELECT "monitorId",
+        COUNT(*)::bigint AS total,
+        SUM(CASE WHEN "isUp" THEN 1 ELSE 0 END)::bigint AS up_count
+      FROM "Check"
+      WHERE "monitorId" = ANY(${monitorIds})
+        AND "checkedAt" >= ${since}
+      GROUP BY "monitorId"
+    `;
+
+    return rows.map((r) => ({
+      monitorId: r.monitorId,
+      total: Number(r.total),
+      upCount: Number(r.up_count),
+    }));
   }
 
   async findForStats(monitorId: string, since: Date): Promise<StatsSample[]> {
