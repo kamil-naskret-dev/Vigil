@@ -25,6 +25,8 @@ import { GetMonitorHandler } from '../../../core/application/monitor/queries/get
 import { ListMonitorsHandler } from '../../../core/application/monitor/queries/list-monitors.handler';
 import { ListAlertChannelsHandler } from '../../../core/application/monitor/queries/list-alert-channels.handler';
 import { GetCheckHistoryHandler } from '../../../core/application/monitor/queries/get-check-history.handler';
+import { GetMonitorStatsHandler } from '../../../core/application/monitor/queries/get-monitor-stats.handler';
+import { GetMonitorStatsQuery, StatsPeriod } from '../../../core/application/monitor/queries/get-monitor-stats.query';
 import { CreateMonitorCommand } from '../../../core/application/monitor/commands/create-monitor.command';
 import { UpdateMonitorCommand } from '../../../core/application/monitor/commands/update-monitor.command';
 import { DeleteMonitorCommand } from '../../../core/application/monitor/commands/delete-monitor.command';
@@ -56,6 +58,7 @@ export class MonitorController {
     private readonly listHandler: ListMonitorsHandler,
     private readonly listChannelsHandler: ListAlertChannelsHandler,
     private readonly getCheckHistoryHandler: GetCheckHistoryHandler,
+    private readonly getMonitorStatsHandler: GetMonitorStatsHandler,
     private readonly performCheck: PerformCheckUseCase,
   ) {}
 
@@ -158,6 +161,17 @@ export class MonitorController {
         limit ? parseInt(limit) : 100,
         page ? parseInt(page) : 1,
       ),
+    );
+  }
+
+  @Get(':id/stats')
+  async getStats(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Query('period') period?: string,
+  ) {
+    return this.getMonitorStatsHandler.execute(
+      new GetMonitorStatsQuery(id, user.sub, (period as StatsPeriod) ?? '7d'),
     );
   }
 

@@ -14,8 +14,14 @@ export interface CheckHistoryResult {
   limit: number;
 }
 
+export interface StatsSample {
+  isUp: boolean;
+  responseTimeMs: number | null;
+}
+
 export interface ICheckRepository {
   save(check: Check): Promise<void>;
   findByMonitor(monitorId: string, limit?: number): Promise<Check[]>;
   findHistory(monitorId: string, filters: CheckHistoryFilters): Promise<CheckHistoryResult>;
+  findForStats(monitorId: string, since: Date): Promise<StatsSample[]>;
 }

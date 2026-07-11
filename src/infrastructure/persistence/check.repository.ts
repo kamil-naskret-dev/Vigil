@@ -3,6 +3,7 @@ import {
   ICheckRepository,
   CheckHistoryFilters,
   CheckHistoryResult,
+  StatsSample,
 } from '../../core/application/monitor/ports/check.repository.port';
 import { Check } from '../../core/domain/check/check.entity';
 import { PrismaService } from '../prisma/prisma.service';
@@ -54,6 +55,14 @@ export class PrismaCheckRepository implements ICheckRepository {
       page: filters.page,
       limit: filters.limit,
     };
+  }
+
+  async findForStats(monitorId: string, since: Date): Promise<StatsSample[]> {
+    return this.prisma.check.findMany({
+      where: { monitorId, checkedAt: { gte: since } },
+      select: { isUp: true, responseTimeMs: true },
+      orderBy: { checkedAt: 'asc' },
+    });
   }
 
   async findByMonitor(monitorId: string, limit = 100): Promise<Check[]> {

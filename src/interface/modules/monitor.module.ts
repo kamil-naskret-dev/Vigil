@@ -15,6 +15,7 @@ import { GetMonitorHandler } from '../../core/application/monitor/queries/get-mo
 import { ListMonitorsHandler } from '../../core/application/monitor/queries/list-monitors.handler';
 import { ListAlertChannelsHandler } from '../../core/application/monitor/queries/list-alert-channels.handler';
 import { GetCheckHistoryHandler } from '../../core/application/monitor/queries/get-check-history.handler';
+import { GetMonitorStatsHandler } from '../../core/application/monitor/queries/get-monitor-stats.handler';
 import { MonitorController } from '../http/monitor/monitor.controller';
 
 @Module({
@@ -91,6 +92,14 @@ import { MonitorController } from '../http/monitor/monitor.controller';
         monitorRepo: PrismaMonitorRepository,
         checkRepo: PrismaCheckRepository,
       ) => new GetCheckHistoryHandler(monitorRepo, checkRepo),
+      inject: [PrismaMonitorRepository, PrismaCheckRepository],
+    },
+    {
+      provide: GetMonitorStatsHandler,
+      useFactory: (
+        monitorRepo: PrismaMonitorRepository,
+        checkRepo: PrismaCheckRepository,
+      ) => new GetMonitorStatsHandler(monitorRepo, checkRepo),
       inject: [PrismaMonitorRepository, PrismaCheckRepository],
     },
   ],
