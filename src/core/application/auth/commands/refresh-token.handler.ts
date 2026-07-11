@@ -1,8 +1,8 @@
 import { IRefreshTokenRepository } from '../ports/refresh-token.repository.port';
 import { RefreshTokenCommand } from './refresh-token.command';
 import { IJwtService } from './login-user.handler';
-import { AppException } from '../../domain/errors/app.exception';
-import { ErrorCode } from '../../domain/errors/error-codes.enum';
+import { AppException } from '../../../domain/errors/app.exception';
+import { ErrorCode } from '../../../domain/errors/error-codes.enum';
 
 export interface RefreshResult {
   accessToken: string;

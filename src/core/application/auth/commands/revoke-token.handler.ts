@@ -1,7 +1,7 @@
 import { IRefreshTokenRepository } from '../ports/refresh-token.repository.port';
 import { RevokeTokenCommand } from './revoke-token.command';
-import { AppException } from '../../domain/errors/app.exception';
-import { ErrorCode } from '../../domain/errors/error-codes.enum';
+import { AppException } from '../../../domain/errors/app.exception';
+import { ErrorCode } from '../../../domain/errors/error-codes.enum';
 
 export class RevokeTokenHandler {
   constructor(

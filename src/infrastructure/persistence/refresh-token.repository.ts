@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   IRefreshTokenRepository,
   RefreshTokenData,
-} from '../../core/application/ports/refresh-token.repository.port';
+} from '../../core/application/auth/ports/refresh-token.repository.port';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
