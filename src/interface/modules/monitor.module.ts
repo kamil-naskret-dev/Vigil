@@ -16,11 +16,13 @@ import { ListMonitorsHandler } from '../../core/application/monitor/queries/list
 import { ListAlertChannelsHandler } from '../../core/application/monitor/queries/list-alert-channels.handler';
 import { GetCheckHistoryHandler } from '../../core/application/monitor/queries/get-check-history.handler';
 import { GetMonitorStatsHandler } from '../../core/application/monitor/queries/get-monitor-stats.handler';
+import { GetDashboardSummaryHandler } from '../../core/application/monitor/queries/get-dashboard-summary.handler';
 import { MonitorController } from '../http/monitor/monitor.controller';
+import { DashboardController } from '../http/dashboard/dashboard.controller';
 
 @Module({
   imports: [CheckerModule],
-  controllers: [MonitorController],
+  controllers: [MonitorController, DashboardController],
   providers: [
     PrismaMonitorRepository,
     {
@@ -100,6 +102,14 @@ import { MonitorController } from '../http/monitor/monitor.controller';
         monitorRepo: PrismaMonitorRepository,
         checkRepo: PrismaCheckRepository,
       ) => new GetMonitorStatsHandler(monitorRepo, checkRepo),
+      inject: [PrismaMonitorRepository, PrismaCheckRepository],
+    },
+    {
+      provide: GetDashboardSummaryHandler,
+      useFactory: (
+        monitorRepo: PrismaMonitorRepository,
+        checkRepo: PrismaCheckRepository,
+      ) => new GetDashboardSummaryHandler(monitorRepo, checkRepo),
       inject: [PrismaMonitorRepository, PrismaCheckRepository],
     },
   ],
