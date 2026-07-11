@@ -9,6 +9,7 @@ import { PrismaCheckRepository } from '../../infrastructure/persistence/check.re
 import { PrismaMonitorRepository } from '../../infrastructure/persistence/monitor.repository';
 import { BullMQScheduler, CHECK_QUEUE } from '../../infrastructure/scheduler/bullmq.scheduler';
 import { CheckWorker } from '../../infrastructure/scheduler/check.worker';
+import { SchedulerBootstrapService } from '../../infrastructure/scheduler/scheduler-bootstrap.service';
 import { PerformCheckUseCase } from '../../core/application/monitor/commands/perform-check.use-case';
 
 @Module({
@@ -39,6 +40,7 @@ import { PerformCheckUseCase } from '../../core/application/monitor/commands/per
     PrismaMonitorRepository,
     BullMQScheduler,
     CheckWorker,
+    SchedulerBootstrapService,
     {
       provide: PerformCheckUseCase,
       useFactory: (

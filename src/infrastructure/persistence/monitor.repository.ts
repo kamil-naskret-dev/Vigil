@@ -43,6 +43,13 @@ export class PrismaMonitorRepository implements IMonitorRepository {
     return records.map((r) => this.toDomain(r));
   }
 
+  async findAllActive(): Promise<Monitor[]> {
+    const records = await this.prisma.monitor.findMany({
+      where: { status: { not: 'PAUSED' } },
+    });
+    return records.map((r) => this.toDomain(r));
+  }
+
   async save(monitor: Monitor): Promise<void> {
     await this.prisma.monitor.upsert({
       where: { id: monitor.id },
