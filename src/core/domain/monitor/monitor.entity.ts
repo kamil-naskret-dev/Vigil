@@ -93,7 +93,10 @@ export class Monitor {
   recordFailure(): void {
     this._consecutiveFailures += 1;
 
-    if (this._consecutiveFailures >= DEGRADED_THRESHOLD) {
+    if (
+      this._consecutiveFailures >= DEGRADED_THRESHOLD &&
+      this._status !== MonitorStatus.DEGRADED
+    ) {
       this._status = MonitorStatus.DEGRADED;
       this._events.push(
         new MonitorDegraded(this.id, this.userId, this.url.value),
