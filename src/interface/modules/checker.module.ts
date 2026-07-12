@@ -31,6 +31,7 @@ import { LoggerModule } from '../../infrastructure/logger/logger.module';
         connection: {
           host: config.getOrThrow<string>('REDIS_HOST'),
           port: config.getOrThrow<number>('REDIS_PORT'),
+          password: config.get<string>('REDIS_PASSWORD'),
         },
       }),
     }),
